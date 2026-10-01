@@ -8,7 +8,7 @@ This pipeline automates the end-to-end lifecycle—from code checkout to monitor
 
 1. **`Jenkinsfile`**: A complete, 7-stage declarative pipeline implementing:
    - **Stage 1: Build** - Multi-stage Docker builds for the Express backend and React/Vite frontend.
-   - **Stage 2: Test** - Runs 91 automated tests (46 Node.js backend unit & PostgreSQL integration tests, 6 frontend client validation tests, and 39 Python Pytest contract regression tests).
+   - **Stage 2: Test** - Runs 85 automated tests (46 Node.js backend unit & PostgreSQL integration tests and 39 Python Pytest contract regression tests).
    - **Stage 3: Code Quality** - Runs SonarCloud static analysis with defined thresholds.
    - **Stage 4: Security** - Tri-layer security scans (`npm audit`, `Bandit` SAST, and `Trivy` container scanning).
    - **Stage 5: Deploy** - Deploys containers to an isolated Docker network (`iot-net`) with automated database migration and health check validation.
