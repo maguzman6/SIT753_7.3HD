@@ -110,8 +110,31 @@ EOF
                 // 3. Clean up test database
                 sh 'docker rm -f test-db 2>/dev/null || true'
 
-                // 4. Data Science & Anomaly Detection Contract Tests
-                sh 'python3 -m pytest tests/ -v || pytest tests/ -v || true'
+                // 4. Frontend Client Validation & Utility Unit Tests
+                echo 'Running Frontend Client Validation Unit Tests...'
+                dir('new-frontend/frontend') {
+                    sh '''
+                        node --input-type=module -e '
+                            import assert from "node:assert/strict";
+                            import { validateEmail, validateLoginPassword, validateConfirmPassword, getPasswordRules } from "./src/utils/validation.js";
+
+                            assert.equal(validateEmail("admin@deakin.edu.au"), "");
+                            assert.notEqual(validateEmail("invalid-email"), "");
+                            assert.equal(validateLoginPassword("Password123!"), "");
+                            assert.equal(validateConfirmPassword("Password123!", "Password123!"), "");
+                            assert.notEqual(validateConfirmPassword("Password123!", "Mismatch"), "");
+                            assert.equal(getPasswordRules("Password123!").every(r => r.valid), true);
+                            console.log("✔ Frontend Client Validation Unit Tests: 6/6 assertions passed successfully.");
+                        '
+                    '''
+                }
+
+                // 5. Python Contract Regression & Response Validator Tests (39 tests)
+                echo 'Running Python Contract Regression & Response Validator Tests (Pytest)...'
+                sh '''
+                    pip3 install pytest 2>/dev/null || true
+                    PYTHONPATH=. python3 -m pytest tests/ -v
+                '''
             }
         }
 
@@ -249,9 +272,12 @@ SEED_EOF
 
         stage('6. Release') {
             steps {
-                echo 'Tagging and promoting release...'
-                sh 'docker tag intelligent-iot-backend:latest intelligent-iot-backend:v1.0.${BUILD_NUMBER}'
-                echo "Release v1.0.${BUILD_NUMBER} published successfully."
+                echo 'Tagging and promoting release artifacts (Backend & Frontend)...'
+                sh '''
+                    docker tag intelligent-iot-backend:latest intelligent-iot-backend:v1.0.${BUILD_NUMBER}
+                    docker tag intelligent-iot-frontend:latest intelligent-iot-frontend:v1.0.${BUILD_NUMBER}
+                    echo "Published release artifacts: intelligent-iot-backend:v1.0.${BUILD_NUMBER} and intelligent-iot-frontend:v1.0.${BUILD_NUMBER}"
+                '''
             }
         }
 
